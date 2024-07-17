@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 const saltRounds = 10;
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_user}:${process.env.DB_Password}@datafind.xfgov3s.mongodb.net/?retryWrites=true&w=majority&appName=datafind`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -30,6 +30,7 @@ async function run() {
 
     // all db cluster
     const registerUser = client.db("Mobile_fun_app").collection("registerUser");
+    const userAccount = client.db("Mobile_fun_app").collection("allAccount");
 
     app.get("/", (req, res) => {
       res.send("Hello world!");
@@ -73,10 +74,19 @@ async function run() {
         }
     });
 
-    app.post("/changeRole/:text", verifyUser, async(req, res)=>{
+    app.post("/changeRole/:text/:id", verifyUser, async(req, res)=>{
       const texts = req.params.text;
+      const id = req.params.id;
+      console.log(texts, id)
+      const query = {_id : new ObjectId(texts)}
+      const options = {
+        $set : {
+          status : id
+        }
+      }
       if(req.usersData.status === "admin"){
-        const result = await registerUser.updateOne
+        const result = await registerUser.updateOne(query, options)
+        return res.send(result)
       }
     })
 
@@ -102,6 +112,8 @@ async function run() {
         }
         const result = await registerUser.find(query).toArray();
         res.send(result)
+      }else{
+        return res.send({role : "agent"})
       }
   })
     app.post("/login", async (req, res) => {
