@@ -69,17 +69,41 @@ async function run() {
     }
     app.post("/verifyToken", verifyUser, async (req, res) => {
         if(req.usersData){
-          res.send(req.usersData)
+          res.send({data : req.usersData, status : true})
         }
     });
 
+    app.post("/changeRole/:text", verifyUser, async(req, res)=>{
+      const texts = req.params.text;
+      if(req.usersData.status === "admin"){
+        const result = await registerUser.updateOne
+      }
+    })
+
     app.post("/alluserPending", verifyUser, async(req ,res)=>{
-        console.log(req.usersData)
         if(req.usersData.status === "admin"){
           const result = await registerUser.find({status : "pending"}).toArray();
           res.send(result)
         }
     })
+
+    app.post("/allAproveUser", verifyUser, async(req ,res)=>{
+      console.log(req.usersData)
+      if(req.usersData.status === "admin"){
+        const query = {
+          $or : [
+            {
+              status : "agent",
+            },
+            {
+              status : "user"
+            }
+          ]
+        }
+        const result = await registerUser.find(query).toArray();
+        res.send(result)
+      }
+  })
     app.post("/login", async (req, res) => {
       const { user, pin } = req.body;
       const query = {
