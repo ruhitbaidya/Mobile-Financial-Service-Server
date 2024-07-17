@@ -44,7 +44,7 @@ async function run() {
       res.send({ token });
     });
 
-    app.post("/verifyToken", async (req, res) => {
+    const verifyUser = (req, res, next)=>{
       const {token} = req.body;
       if(token === null){
         return res.send({status : false})
@@ -59,14 +59,27 @@ async function run() {
             }
             const userFind = await registerUser.findOne(query)
             if(userFind){
-                return res.send(userFind)            
+                req.usersData = userFind  
+                next() 
             }else{
                 return res.send({status : false})
             }
         }
       });
+    }
+    app.post("/verifyToken", verifyUser, async (req, res) => {
+        if(req.usersData){
+          res.send(req.usersData)
+        }
     });
 
+    app.post("/alluserPending", verifyUser, async(req ,res)=>{
+        console.log(req.usersData)
+        if(req.usersData.status === "admin"){
+          const result = await registerUser.find({status : "pending"}).toArray();
+          res.send(result)
+        }
+    })
     app.post("/login", async (req, res) => {
       const { user, pin } = req.body;
       const query = {
